@@ -1,9 +1,18 @@
-the Confluence wiki into a vector store and use an LLM-powered system to efficiently answer team members' questions.
+#!/bin/bash
 
-I understand that your team has developed an API to provide access to LLMs and embedding models. To proceed with my project, I would like to request access to this API. This would allow me to integrate the models into the system and ensure seamless retrieval and response generation based on the documentation.
+# Site à télécharger
+site="https://exemple.com"
 
-Please let me know the necessary steps to gain access and any requirements or guidelines I should follow. I appreciate your time and support, and I’d be happy to provide any additional details about the project if needed.
+# Télécharger la page principale
+curl -O "$site"
 
-Looking forward to your response.
+# Extraire les liens internes et les télécharger
+curl -s "$site" | grep -oP '(?<=href=")[^"#?]*' | while read link; do
+    # Vérifier que le lien est relatif
+    if [[ "$link" =~ ^/ ]]; then
+        link="$site$link"
+    fi
+    # Télécharger les pages
+    curl -O "$link"
+done
 
-Best regards,
