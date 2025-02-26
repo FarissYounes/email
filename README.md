@@ -1,48 +1,42 @@
-import os
-import requests
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+#!/bin/bash
 
-# URL de la page à parser
-url = "https://exemple.com"  # Remplacez par l'URL de départ
-response = requests.get(url)
-if response.status_code != 200:
-    raise Exception(f"Erreur lors de la récupération de la page : {url}")
+base_url="https://exemple.com"  # Remplacez par l'URL de départ
+destination="fichiers_html"       # Dossier où stocker les fichiers
 
-# Parser le HTML de la page
-soup = BeautifulSoup(response.text, 'html.parser')
+mkdir -p "$destination"
 
-# Répertoire où sauvegarder les fichiers téléchargés
-dossier_destination = "fichiers_html"
-if not os.path.exists(dossier_destination):
-    os.makedirs(dossier_destination)
+curl -s "$base_url" -o main.html
 
-# Récupération de toutes les balises <a> avec un href
-balises_a = soup.find_all('a', href=True)
-for balise in balises_a:
-    href = balise['href']
-    # Reconstruire l'URL complète (au cas où href soit relatif)
-    url_complet = urljoin(url, href)
+grep -oP '<a\s+href="[^"]+">.*?</a>' main.html | while read -r ligne; do
+    # Extraire l'attribut href
+    href=$(echo "$ligne" | grep -oP '(?<=href=")[^"]+')
+    # Extraire le texte entre <a> et </a>
+    texte=$(echo "$ligne" | sed -e 's/.*">//' -e 's/<\/a>.*//')
     
-    # Récupérer le texte entre <a> et </a> pour nommer le fichier
-    nom_fichier = balise.get_text().strip()
-    # Si le texte est vide, on utilise le dernier segment de l'URL (sans l'extension)
-    if not nom_fichier:
-        nom_fichier = os.path.splitext(os.path.basename(url_complet))[0]
-        if not nom_fichier:
-            nom_fichier = "inconnu"
-    
-    # On vérifie que l'URL se termine par .html (ou .htm selon vos besoins)
-    if url_complet.lower().endswith((".html", ".htm")):
-        try:
-            page_html = requests.get(url_complet)
-            if page_html.status_code == 200:
-                # Construction du chemin complet pour enregistrer le fichier
-                chemin_fichier = os.path.join(dossier_destination, f"{nom_fichier}.html")
-                with open(chemin_fichier, "w", encoding="utf-8") as fichier:
-                    fichier.write(page_html.text)
-                print(f"Téléchargé : {url_complet} -> {chemin_fichier}")
-            else:
-                print(f"Erreur lors du téléchargement de {url_complet} : {page_html.status_code}")
-        except Exception as e:
-            print(f"Exception lors du téléchargement de {url_complet} : {e}")
+    # Si href est vide, passer à l'itération suivante
+    [ -z "$href" ] && continue
+
+    # Si le lien est relatif, on le transforme en URL absolue
+    if [[ "$href" != http* ]]; then
+        href="${base_url%/}/$href"
+    fi
+
+    # Vérifier que l'URL se termine par .html ou .htm
+    if [[ "$href" =~ \.html?$ ]]; then
+        # Si le texte est vide, utiliser le nom de fichier de l'URL (sans extension)
+        if [ -z "$texte" ]; then
+            texte=$(basename "$href")
+            texte="${texte%.*}"
+        fi
+
+        # Nettoyer le nom pour qu'il ne contienne que des lettres, chiffres ou underscores
+        nom_fichier=$(echo "$texte" | tr -cd '[:alnum:]_')
+        [ -z "$nom_fichier" ] && nom_fichier="inconnu"
+
+        # Définir le chemin complet du fichier à enregistrer
+        sortie="${destination}/${nom_fichier}.html"
+
+        echo "Téléchargement de $href -> $sortie"
+        curl -s "$href" -o "$sortie"
+    fi
+done
