@@ -67,3 +67,35 @@ print("Documents récupérés :")
 for idx, score in zip(doc_indices, similarity_scores):
     print(f"Document ID {documents[idx].metadata.get('id')} - Score: {score:.4f}")
     print("Contenu :", documents[idx].page_content)
+
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+from elasticsearch import Elasticsearch
+
+# Connexion à l'instance Elasticsearch
+es = Elasticsearch("http://localhost:9200")  # Change l'URL si nécessaire
+
+# Définir le mapping de l'index
+index_name = "mon_index"
+mapping = {
+    "settings": {
+        "number_of_shards": 1,
+        "number_of_replicas": 1
+    },
+    "mappings": {
+        "properties": {
+            "titre": {"type": "text"},
+            "description": {"type": "text"},
+            "date_creation": {"type": "date"}
+        }
+    }
+}
+
+# Vérifier si l'index existe déjà
+if not es.indices.exists(index=index_name):
+    # Créer l'index avec le mapping
+    es.indices.create(index=index_name, body=mapping)
+    print(f"Index '{index_name}' créé avec succès.")
+else:
+    print(f"L'index '{index_name}' existe déjà.")
+
