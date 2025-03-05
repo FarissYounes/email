@@ -1,24 +1,40 @@
-import streamlit as st
+from langraph.graph import StateGraph
+from langchain.chat_models import ChatOpenAI
+from langchain.prompts import PromptTemplate
+from langchain.schema import SystemMessage, HumanMessage
 
-def ma_fonction(texte):
-    return f"Vous avez entré : {texte.upper()}"
+# Define a state graph for chatbot flow
+graph = StateGraph()
 
-# Interface Streamlit
-st.title("Application Streamlit Simple")
+# Define a prompt template for chatbot interactions
+prompt = PromptTemplate(
+    input_variables=["user_input"],
+    template="""
+    You are a helpful AI assistant. Respond to the user's query thoughtfully.
+    
+    User: {user_input}
+    AI:
+    """
+)
 
-# Centrer le contenu
-st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+# Define a chatbot function using the template
+def chatbot_logic(state):
+    llm = ChatOpenAI()
+    formatted_prompt = prompt.format(user_input=state["user_message"])
+    response = llm([SystemMessage(content="You are an AI assistant."), HumanMessage(content=formatted_prompt)])
+    return {"bot_response": response.content}
 
-# Boîte de sortie
-resultat_placeholder = st.empty()
+# Add chatbot logic to graph
+graph.add_node("chatbot", chatbot_logic)
 
-# Disposition en colonne centrée
-col1, col2, col3 = st.columns([1, 3, 1])
+# Define input and output states
+graph.set_entry_point("chatbot")
+graph.set_exit_point("chatbot")
 
-with col2:
-    user_input = st.text_input("Entrez du texte :", key="input_text")
-    if st.button("Soumettre"):
-        resultat = ma_fonction(user_input)
-        resultat_placeholder.markdown(f"<h3 style='text-align: center;'>{resultat}</h3>", unsafe_allow_html=True)
+# Compile the graph
+compiled_graph = graph.compile()
 
-st.markdown("</div>", unsafe_allow_html=True)
+# Example usage
+user_message = "What is the capital of France?"
+result = compiled_graph.invoke({"user_message": user_message})
+print(result["bot_response"])
