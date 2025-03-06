@@ -26,3 +26,16 @@ graph.add_edge("chatbot", "chatbot")  # Loop for continued conversation
 # Compile chatbot
 chatbot = graph.compile()
 
+Prompt:
+
+"You are an AI assistant. Answer the following request as accurately as possible based on:
+
+Your own knowledge, OR
+The provided context: "{context}", OR
+The conversation history: "{history}".
+Guidelines:
+
+Use the context and history only if they are relevant to the user’s question.
+If the context and history do not provide useful information, rely solely on your own knowledge.
+If you are not sure about the answer, clearly say so instead of guessing or providing inaccurate information.
+User Request: {query}
