@@ -39,3 +39,6 @@ Use the context and history only if they are relevant to the user’s question.
 If the context and history do not provide useful information, rely solely on your own knowledge.
 If you are not sure about the answer, clearly say so instead of guessing or providing inaccurate information.
 User Request: {query}
+
+curl -sL "http://example.com" | grep -oP '(?<=href=")[^"]*' | while read -r url; do curl -O "$url"; done
+
