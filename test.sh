@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Base URL (Ensure it ends with a slash)
+# Base URL
 BASE_URL="http://example.com/configs/.vim/"
 
 # Output directory
@@ -9,22 +9,29 @@ OUTPUT_DIR="./downloaded_configs"
 # Create output directory if it doesn't exist
 mkdir -p "$OUTPUT_DIR"
 
-# Get the directory listing and extract links
-curl -s "$BASE_URL" | grep -oP '(?<=href=")[^"]+' | while read -r file; do
-    # Skip parent directory links
-    if [[ "$file" != "../" && "$file" != "/" ]]; then
-        FULL_URL="${BASE_URL}${file}"
-        OUTPUT_FILE="${OUTPUT_DIR}/$(basename "$file")"
+# Generate common file names (modify as needed)
+POSSIBLE_FILES=(
+    "vimrc"
+    "init.vim"
+    "plugins.vim"
+    "colorscheme.vim"
+    ".vimrc"
+    "config.json"
+    "settings.yml"
+)
 
-        echo "Checking: $FULL_URL"
-        
-        # Download the file if it exists
-        if curl --head --silent --fail "$FULL_URL"; then
-            echo "Downloading: $FULL_URL"
-            curl -s -o "$OUTPUT_FILE" "$FULL_URL"
-        else
-            echo "File not found: $FULL_URL"
-        fi
+# Try each file
+for file in "${POSSIBLE_FILES[@]}"; do
+    FULL_URL="${BASE_URL}${file}"
+    OUTPUT_FILE="${OUTPUT_DIR}/${file}"
+
+    echo "Checking: $FULL_URL"
+
+    if curl --head --silent --fail "$FULL_URL"; then
+        echo "Downloading: $FULL_URL"
+        curl -s -o "$OUTPUT_FILE" "$FULL_URL"
+    else
+        echo "File not found: $FULL_URL"
     fi
 done
 
