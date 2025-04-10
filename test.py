@@ -8,6 +8,26 @@
 # Pour chaque URL, il réalise une requête HEAD (via curl) pour vérifier son existence.
 # En cas de code HTTP 200, 301 ou 302, il affiche l'URL trouvée.
 #
+{
+  "size": 0,
+  "query": {
+    "range": {
+      "created_at": {
+        "gte": "2025-04-09",
+        "lt": "2025-04-10"
+      }
+    }
+  },
+  "aggs": {
+    "duplicate_uuids": {
+      "terms": {
+        "field": "uuid.keyword",
+        "size": 100000,
+        "min_doc_count": 2
+      }
+    }
+  }
+}
 
 
 from elasticsearch import Elasticsearch
