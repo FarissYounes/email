@@ -8,6 +8,8 @@
 # Pour chaque URL, il réalise une requête HEAD (via curl) pour vérifier son existence.
 # En cas de code HTTP 200, 301 ou 302, il affiche l'URL trouvée.
 #
+condition = df[['champ1', 'champ2', 'champ3']].apply(lambda x: x.str.strip() == '', axis=1).all(axis=1)
+
 {
   "size": 0,
   "query": {
