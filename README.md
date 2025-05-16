@@ -1,17 +1,9 @@
-curl -X PUT "localhost:9200/vector_store" -H 'Content-Type: application/json' -d '
-{
-  "mappings": {
-    "properties": {
-      "page_content": {
-        "type": "text"
-      },
-      "metadata": {
-        "type": "object"
-      },
-      "embedding": {
-        "type": "dense_vector",
-        "dims": 384
-      }
-    }
-  }
-}'
+from playwright.sync_api import sync_playwright
+
+with sync_playwright() as p:
+    browser = p.chromium.launch()
+    page = browser.new_page()
+    page.goto("https://example.com", wait_until="networkidle")
+    with open("page.html", "w", encoding="utf-8") as f:
+        f.write(page.content())
+    browser.close()
