@@ -1,9 +1,2 @@
-from playwright.sync_api import sync_playwright
-
-with sync_playwright() as p:
-    browser = p.chromium.launch()
-    page = browser.new_page()
-    page.goto("https://example.com", wait_until="networkidle")
-    with open("page.html", "w", encoding="utf-8") as f:
-        f.write(page.content())
-    browser.close()
+Ce stage m’a permis de mieux comprendre le fonctionnement du secteur du Middle Office Trading ainsi que les outils et processus associés. En collaborant avec l’équipe de développement de l’application utilisée par les équipes Middle Office, j’ai pu acquérir une meilleure vision des besoins métiers et de la manière dont les solutions techniques y répondent. J’ai particulièrement apprécié l’autonomie qui m’a été confiée, ainsi que la disponibilité et le soutien de l’équipe. Cette expérience a renforcé mon intérêt pour le développement d’applications à forte valeur ajoutée métier, et je souhaite approfondir mes compétences dans ce domaine, notamment en architecture logicielle et en méthodologies agiles.
+Cette expérience a confirmé mon intérêt pour le développement de solutions techniques au service des activités de marché, et je souhaite poursuivre dans cette voie, en approfondissant notamment mes compétences en traitement de données, architecture distribuée et finance de marché.
