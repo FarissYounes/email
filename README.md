@@ -1,77 +1,44 @@
 # 📊 Analysis of Ignored Fields
 
-This project analyzes field inclusion/exclusion and ignore behavior across XML scenario files, using a set of Python scripts and Jupyter notebooks to compute field-level statistics and identify outlet configurations.
-
-
----
-
-## 🧩 Scripts Overview
-
-### 1. `fetchRelevantFields.py`
-
-This script parses all XML files in the `/scenarios` directory and identifies fields based on their status in the XML and the properties file:
-
-- **Excluded fields**: Found in the `excludes` section of XML
-- **Ignored fields**: Defined in the properties file
-
-#### 📄 Output Files
-
-- `excIgnoredFields.txt`: Excluded **and** ignored fields
-- `excNotIgnoredFields.txt`: Excluded but **not** ignored fields
-- `incIgnoredFields.txt`: Included but **ignored** fields
-- `incNotIgnoredFields.txt`: Included **and not** ignored fields
-
-These files serve as the base for computing field occurrence statistics.
+This project is designed to analyze the behavior of included, excluded, and ignored fields in XML-based scenarios and compute field-level statistics across multiple configurations.
 
 ---
 
-### 2. `FetchAllFieldsIncluded&Excluded.py`
-
-This script consolidates the output of `fetchRelevantFields.py` to produce a master list of all relevant fields (included, excluded, ignored, not ignored).
-
-#### 📄 Output
-
-- `allFields.txt`: Master list of all relevant fields to analyze
-
----
-
-### 3. `parsePdlRef.py`
-
-Parses the PDL reference files and counts the number of times each field (from `allFields.txt`) appears.
-
-#### 📄 Output
-
-- `occByPdlRef.csv`: Field occurrence statistics from PDL references
-
----
-
-### 4. Jupyter Notebooks (`*.ipynb`)
-
-Two notebooks are used to compute and aggregate statistics from the output of `fetchRelevantFields.py`. They also identify outlets with `includes` and `excludes`.
-
-#### 📄 Output Files
-
-- `occIncludedIgnoredFields.csv`: Included and ignored fields
-- `occExcludedIgnoredFields.csv`: Excluded and ignored fields
-- `occIncludedNotIgnoredFields.csv`: Included but not ignored fields
-- `occExcludedNotIgnoredFields.csv`: Excluded but not ignored fields
-- `outletWithIncludes.csv`: List of outlets with `includes`
-- `outletWithExcludes.csv`: List of outlets with `excludes`
-
----
-
-## ✅ Python Setup
+## 🐍 Python Setup
 
 ### 1. Install Python
 
-Download Python from: https://www.python.org/downloads/  
-> ☑️ Don’t forget to check “Add Python to PATH” during installation.
+Download Python (version 3.13 or higher) from your local software center or from the official website:  
+👉 https://www.python.org/downloads/
 
-### 2. Install Dependencies
+> ✅ Ensure you check **"Add Python to PATH"** during installation.
 
-Run the following command from the project root:
+---
+
+### 2. Configure Artifactory Access (Environment Variables)
+
+This project uses internal packages hosted on JFrog Artifactory.
+
+#### 🔐 Steps:
+
+1. Go to [JFrog Artifactory Login](https://artifactory.cib.echonet/ui/login/)
+2. Generate your identity token
+3. Set the following environment variables:
 
 ```bash
-pip install -r requirements.txt
+ARTIFACTORY_KEY=your_identity_token
+ARTIFACTORY_USER=your_username
+'''
+# 📦 pip_cib Setup for Artifactory Access
 
+This guide explains how to define and use the `pip_cib` variable to install Python packages from the internal Artifactory repository.
 
+---
+
+## 🔧 Define the `pip_cib` Environment Variable
+
+Set the following environment variable in your system:
+
+```bash
+
+pip_cib=--trusted-host artifactory.cib.echonet --index-url https://<uid>:<key>@artifactory.cib.echonet/artifactory/api/pypi/pypi/simple
