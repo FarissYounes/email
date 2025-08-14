@@ -5,13 +5,15 @@ import argparse
 import csv
 
 def run_git_command(args, cwd=None):
-    """Exécute une commande Git en ligne de commande."""
-    result = subprocess.run(["git"] + args, cwd=cwd, capture_output=True, text=True)
-    if result.returncode != 0:
-        print(f"Erreur git {' '.join(args)}:\n{result.stderr}")
-    else:
-        print(result.stdout)
-    return result
+    """Exécute une commande Git (Python 2.7)."""
+    cmd = ["git"] + args
+    try:
+        output = subprocess.check_output(cmd, cwd=cwd)
+        print(output)
+        return output
+    except subprocess.CalledProcessError as e:
+        print("Erreur git {}:\n{}".format(" ".join(args), e.output))
+        return None
 
 def update_ft(tmp_path):
     repo_path = os.path.abspath(os.path.join(tmp_path, "../../../"))
@@ -29,7 +31,7 @@ def update_ft(tmp_path):
                     branch_name = "update_ref_files"
 
                     # Vérifie si la branche existe
-                    branches = subprocess.run(["git", "branch", "--list", branch_name], cwd=repo_path, capture_output=True, text=True).stdout
+                    branches = run_git_command(["branch", "--list", branch_name], cwd=repo_path) or ""
                     if branch_name not in branches:
                         run_git_command(["checkout", "master"], cwd=repo_path)
                         run_git_command(["checkout", "-b", branch_name], cwd=repo_path)
@@ -43,7 +45,7 @@ def update_ft(tmp_path):
 
                     run_git_command(["add", "functional-tests/data/"], cwd=repo_path)
 
-                    commit_message = f"[{line[3][15:]}] - Update reference file : {line[1]}"
+                    commit_message = "[{}] - Update reference file : {}".format(line[3][15:], line[1])
                     run_git_command(["commit", "-m", commit_message], cwd=repo_path)
 
 if __name__ == "__main__":
@@ -51,4 +53,4 @@ if __name__ == "__main__":
     parser.add_argument("agent", type=str, help="agent_name")
     args = parser.parse_args()
 
-    update_ft(f"D:/power-{args.agent}/controller/functest/tmp")
+    update_ft("D:/power-{}/controller/functest/tmp".format(args.agent))
