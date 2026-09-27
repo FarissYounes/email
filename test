@@ -1,0 +1,87 @@
+try {
+
+        def response = httpRequest(
+            authentication: credentialsId,
+            url: "${xldUrl}/api/v1/repositories",
+            httpMode: 'GET',
+            validResponseCodes: '200:299'
+        )
+
+        echo "XLD Response JSON:"
+        echo response.content
+
+        def repositories = new groovy.json.JsonSlurper()
+            .parseText(response.content)
+
+        // Root folders to search
+        def rootFolders = [
+            "Applications",
+            "Config",
+            "Infra",
+            "Env"
+        ]
+
+        /*
+         * Search recursively through the repository tree.
+         */
+        def findFolder
+
+        findFolder = { items, currentPath = "" ->
+
+            for (def item : items) {
+
+                String itemPath = currentPath
+                    ? "${currentPath}/${item.name}"
+                    : item.name
+
+                // Check the folder name
+                if (item.name == folderName &&
+                    rootFolders.any { root ->
+                        itemPath.startsWith(root)
+                    }) {
+
+                    return [
+                        id  : item.id,
+                        path: itemPath
+                    ]
+                }
+
+                // Search inside children
+                if (item.children) {
+
+                    def result = findFolder(
+                        item.children,
+                        itemPath
+                    )
+
+                    if (result) {
+                        return result
+                    }
+                }
+            }
+
+            return null
+        }
+
+        def result = findFolder(repositories)
+
+        if (result) {
+
+            echo "XLD folder found"
+            echo "ID   : ${result.id}"
+            echo "Path : ${result.path}"
+
+            return result
+        }
+
+        echo "XLD folder not found: ${folderName}"
+
+        return null
+
+    } catch (Exception e) {
+
+        error(
+            "Error while searching XLD folder '${folderName}': ${e.message}"
+        )
+    }
+}
