@@ -1,0 +1,24 @@
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$Destinations
+)
+
+foreach ($destination in ($Destinations -split ';')) {
+
+    $destination = $destination.Trim()
+
+    if ([string]::IsNullOrWhiteSpace($destination)) {
+        continue
+    }
+
+    $destinationPath = Join-Path 'D:\intpub' $destination
+    $filePath = Join-Path $destinationPath 'app_offline.htm'
+
+    if (Test-Path -LiteralPath $filePath) {
+        Remove-Item -LiteralPath $filePath -Force
+        Write-Host "Fichier supprimé : $filePath"
+    }
+    else {
+        Write-Host "Fichier introuvable : $filePath"
+    }
+}
