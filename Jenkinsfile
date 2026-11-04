@@ -1,61 +1,81 @@
+def oldPath = "Infrastructure/BIPD3/BIPPR/78-PRD/OLD_NAME"
+def newName = "sql2-NEW_NAME"
 
-stage('Update SmbHost Object') {
-    when {
-        expression {
-            env.OBJECT_EXISTENCE_STATUS != 'true'
-        }
-    }
+// 1. Renommer l'objet
+def renameResponse = httpRequest(
+    url: "${XLD_URL}/deployit/repository/rename/${oldPath}?newName=${newName}",
+    httpMode: 'POST',
+    authentication: env.XLD_CRED_ID,
+    acceptType: 'APPLICATION_XML',
+    validResponseCodes: '200:299'
+)
 
-    steps {
-        script {
+println("Rename status: ${renameResponse.status}")
 
-            def xldEnvironment = xldEnvironmentMapping(params.ENVIRONMENT_TRIGRAM)
+// 2. Construire le nouveau chemin
+def newPath = "Infrastructure/BIPD3/BIPPR/78-PRD/${newName}"
 
-            def ciaCiPath = "Infrastructure/CIA/${params.CIA}"
+// 3. GET du nouvel objet
+def getResponse = httpRequest(
+    url: "${XLD_URL}/deployit/repository/ci/${newPath}",
+    httpMode: 'GET',
+    authentication: env.XLD_CRED_ID,
+    acceptType: 'APPLICATION_XML',
+    validResponseCodes: '200'
+)
 
-            // 1. GET : Recuperer le contenu du CI
-            def response = httpRequest(
-                url: "${XLD_URL}/deployit/repository/ci/${SMBHOST_OBJECT_NAME}",
-                httpMode: 'GET',
-                authentication: env.XLD_CRED_ID,
-                acceptType: 'APPLICATION_JSON',
-                contentType: 'APPLICATION_JSON',
-                validResponseCodes: '200'
-            )
+// 4. Modifier address
+def root = new XmlParser(false, false).parseText(getResponse.content)
 
-            def ciaCi = new groovy.json.JsonSlurper().parseText(response.content)
+root.address[0].value = "NOUVELLE_ADRESSE"
 
-            echo "CI retrieved successfully"
-            echo "CI ID: ${ciaCi.id}"
-            echo "CI Type: ${ciaCi.type}"
+// 5. Générer XML
+def writer = new StringWriter()
+new XmlNodePrinter(new PrintWriter(writer)).print(root)
 
-            // 2. REPLACE : Modifier les proprietes
-            assert ciaCi.type == 'overthere.SmbHost' :
-                "Invalid CI type: ${ciaCi.type}"
+// 6. PUT
+def putResponse = httpRequest(
+    url: "${XLD_URL}/deployit/repository/ci/${newPath}",
+    httpMode: 'PUT',
+    authentication: env.XLD_CRED_ID,
+    contentType: 'APPLICATION_XML',
+    acceptType: 'APPLICATION_XML',
+    requestBody: writer.toString(),
+    validResponseCodes: '200:299'
+)
 
-            ciaCi.name = params.NEW_SMBHOST_NAME
-            ciaCi.address = params.NEW_SMBHOST_ADDRESS
+println("Update status: ${putResponse.status}")
 
-            echo "New name: ${ciaCi.name}"
-            echo "New address: ${ciaCi.address}"
+def parser = new XmlParser(false, false)
+def root = parser.parseText(xml)
 
-            // Convertir l'objet modifie en JSON
-            def updatedCi = groovy.json.JsonOutput.toJson(ciaCi)
+// Modification du nom de l'objet
+root.@id = "Infrastructure/BIPD3/BIPPR/78-PRD/sql2-NEW_NAME"
 
-            // 3. PUT : Envoyer les modifications vers XLD
-            def putResponse = httpRequest(
-                url: "${XLD_URL}/deployit/repository/ci/${SMBHOST_OBJECT_NAME}",
-                httpMode: 'PUT',
-                authentication: env.XLD_CRED_ID,
-                acceptType: 'APPLICATION_JSON',
-                contentType: 'APPLICATION_JSON',
-                requestBody: updatedCi,
-                validResponseCodes: '200:299'
-            )
+// Modification de l'adresse
+root.address[0].value = "192.168.X.X"
 
-            echo "XLD update HTTP status: ${putResponse.status}"
-            echo "SmbHost object updated successfully!"
+ggggggg
 
-        }
-    }
-}
+
+
+// Génération du XML
+def writer = new StringWriter()
+def printer = new XmlNodePrinter(new PrintWriter(writer))
+printer.preserveWhitespace = true
+printer.print(root)
+
+def updatedXml = writer.toString()
+
+def putResponse = httpRequest(
+    url: "${XLD_URL}/deployit/repository/ci/${objectPath}",
+    httpMode: 'PUT',
+    authentication: env.XLD_CRED_ID,
+    acceptType: 'APPLICATION_XML',
+    contentType: 'APPLICATION_XML',
+    requestBody: updatedXml,
+    validResponseCodes: '200:299'
+)
+
+println("PUT response: ${putResponse.content}")
+
